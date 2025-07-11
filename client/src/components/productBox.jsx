@@ -43,20 +43,23 @@
 // }
 
 import '../styles/productBox.css'
+import { useCart } from '../components/context/cardContext'
 
 export default function productBox(props) {
-  const {
-    category,
-    image,
-    title,
-    desc,
-    rating = 4.5,
-    reviews = 234,
-    price = 99.99,
-    offerPrice = 79.99,
-    points = 500,
-    finalPrice = 74.99
-  } = props;
+   const { addToCart } = useCart();
+   const {
+      id, category, image, title, desc,
+      offerPrice, price, points, finalPrice,
+      rating, reviews
+    } = props;
+
+     const handleAdd = () => {
+      addToCart({
+        id,
+        name: title,
+        price: offerPrice,
+      });
+    };
 
   return (
     <div className="product-card">
@@ -90,7 +93,7 @@ export default function productBox(props) {
         </div>
       </div>
 
-      <button className="add-to-cart-btn">Add to Cart - &#8377;{offerPrice.toFixed(2)}</button>
+      <button className="add-to-cart-btn" onClick={handleAdd}>Add to Cart - &#8377;{offerPrice.toFixed(2)}</button>
       <button className="use-points-btn">Use Points - &#8377;{finalPrice.toFixed(2)}</button>
     </div>
   );

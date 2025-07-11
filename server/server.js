@@ -8,13 +8,36 @@ const app = express(); //storing express in app and creating our application
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
 
+
+// 👇 Place this line FIRST — BEFORE express.json and any routes
+app.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
+  const sig = req.headers["stripe-signature"];
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+  } catch (err) {
+    console.error("⚠️  Webhook error:", err.message);
+    return res.sendStatus(400);
+  }
+
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object;
+    console.log("✅ Payment completed:", session.id);
+    // TODO: update DB, mark order paid if you store it
+  }
+
+  res.status(200).json({ received: true });
+});
+
        
 app.use(express.json({ limit: '50mb' })); // for JSON
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 app.use(
   session({
-    secret: process.env.SESSION_SECRET, // change to a strong secret and store in .env
+    secret: "hello12", // change to a strong secret and store in .env
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
@@ -50,6 +73,7 @@ app.use(express.static(path.join(__dirname, '../client/dist'))); // Serve static
 // async function main(){
 //   await mongoose.connect("mongodb://localhost:27017/replato"); //connection string "mongodb://localhost:27017/DB_NAME"
 // }
+app.use("/api", require("./payment/stripe"));     // prefix all payment routes with /api
 
 
 //Cloud DB connections
@@ -178,6 +202,26 @@ app.get("/logout", (req, res) => {
 });
 
 
+// add after other routes in server/server.js
+const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;   // set via Stripe CLI
+
+app.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
+  let event;
+  try {
+    const sig = req.headers["stripe-signature"];
+    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+  } catch (err) {
+    console.error("⚠️  Webhook error:", err.message);
+    return res.sendStatus(400);
+  }
+
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object;
+    Order.findOneAndUpdate({ ref: session.id }, { paid: true }).exec();
+  }
+
+  res.json({ received: true });
+});
 
 
 

@@ -9,6 +9,8 @@ import DashBoard from './pages/dashboard';
 import Shop from './pages/shop';
 import Payment from './pages/payment';
 import Profile from './pages/profile';
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentCancel from './pages/PaymentCancel';
 function App() {
   return (
     <>
@@ -25,6 +27,8 @@ function App() {
             <Route path="/shop" element={<Shop/>}/>
             <Route path="/payment" element={<Payment/>}/>   
             <Route path="/profile" element={<Profile/>}/>    
+            <Route path="/payment-success" element={<PaymentSuccess />} />
+            <Route path="/payment-cancel" element={<PaymentCancel />} />
           </Routes>
         </BrowserRouter>
     </>
